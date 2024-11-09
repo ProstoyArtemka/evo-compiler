@@ -15,51 +15,25 @@ var namesRegex *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z_]+[a-zA-Z_0-9]*$`)
 var integerRegex *regexp.Regexp = regexp.MustCompile(`^[0-9]$`)
 var floatRegex *regexp.Regexp = regexp.MustCompile(`^[0-9]+.[0-9]+$`)
 
-func PushLexem() {
+func PushLexem(tokenType int) {
 	if lexem == "" {
 		return
 	}
 
-	var tokenType int = -1
+	if tokenType == -1 {
 
-	if lexem == ";" {
-		tokenType = NEWLINE
-	}
+		if namesRegex.MatchString(lexem) {
+			tokenType = NAME
+		}
 
-	// OPERATORS
+		if integerRegex.MatchString(lexem) {
+			tokenType = INTEGER
+		}
 
-	if BINARY_OPERATORS.Contains(lexem) {
-		tokenType = BINARY_OPERATOR
-	}
+		if floatRegex.MatchString(lexem) {
+			tokenType = FLOAT
+		}
 
-	if lexem == "=" {
-		tokenType = ASSIGN
-	}
-
-	// NAMES
-
-	if namesRegex.MatchString(lexem) {
-		tokenType = NAME
-	}
-
-	// CONSTANTS
-
-	if integerRegex.MatchString(lexem) {
-		tokenType = INTEGER
-	}
-
-	if floatRegex.MatchString(lexem) {
-		tokenType = FLOAT
-	}
-
-	// BRACKETS
-
-	if lexem == "(" {
-		tokenType = L_BRACKET
-	}
-
-	if lexem == ")" {
-		tokenType = R_BRACKET
 	}
 
 	var token = Token{Lexem: lexem, TokenType: tokenType}
@@ -72,35 +46,59 @@ func ToTokens(content string) []Token {
 	for pos := 0; pos < len(content); pos++ {
 		var current = string(content[pos])
 
+		if current == "\"" && len(content) > (pos+1) {
+			var next = string(content[pos+1])
+
+			for pos < len(content) && next != "\"" {
+				lexem += next
+
+				pos++
+				next = string(content[pos+1])
+			}
+
+			pos++
+
+			PushLexem(STRING)
+
+			continue
+		}
+
 		if operatorsRegex.MatchString(current) {
-			PushLexem()
+			PushLexem(-1)
 
 			lexem += current
 
 			var next = string(content[pos+1])
-			for len(content) < (pos+1) && operatorsRegex.MatchString(next) && OPERATORS.Contains(current+next) && len(lexem) < 2 {
+			for pos < len(content) && operatorsRegex.MatchString(next) && OPERATORS.Contains(current+next) && len(lexem) < 2 {
 				lexem += string(content[pos+1])
 
+				pos++
 				next = string(content[pos+1])
 			}
 
-			PushLexem()
+			if BINARY_OPERATORS.Contains(lexem) {
+				PushLexem(BINARY_OPERATOR)
+
+			} else {
+				PushLexem(OPERATORS_TYPES[lexem])
+
+			}
 
 			continue
 		}
 
 		if current == ";" {
-			PushLexem()
+			PushLexem(-1)
 
 			lexem = ";"
 
-			PushLexem()
+			PushLexem(NEWLINE)
 
 			continue
 		}
 
 		if spacesRegex.MatchString(current) {
-			PushLexem()
+			PushLexem(-1)
 
 			continue
 		}
@@ -108,7 +106,7 @@ func ToTokens(content string) []Token {
 		lexem += current
 	}
 
-	PushLexem()
+	PushLexem(-1)
 
 	return tokens
 }

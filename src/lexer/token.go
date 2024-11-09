@@ -6,18 +6,23 @@ import (
 )
 
 const (
+	INVALID = -1
+
 	ASSIGN          = 0
 	BINARY_OPERATOR = 1
+	OPERATOR        = 2
 
-	NAME = 2
+	NAME = 3
 
-	INTEGER = 3
-	FLOAT   = 4
-	STRING  = 5
-	NEWLINE = 6
+	INTEGER = 4
+	FLOAT   = 5
+	STRING  = 6
+	NEWLINE = 7
 
-	L_BRACKET = 7
-	R_BRACKET = 8
+	L_BRACKET = 8
+	R_BRACKET = 9
+
+	EOF = 256
 )
 
 type Token struct {
@@ -31,3 +36,9 @@ func (token Token) Print() {
 
 var OPERATORS = utils.StringArray{"-", "+", "=", "*", "/", "!", "==", "!=", "(", ")"}
 var BINARY_OPERATORS = utils.StringArray{"-", "+", "*", "/", "==", "!="}
+
+var OPERATORS_TYPES map[string]int = map[string]int{
+	"(": L_BRACKET,
+	")": R_BRACKET,
+	"=": ASSIGN,
+}
