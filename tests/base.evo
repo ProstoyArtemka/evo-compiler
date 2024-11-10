@@ -1,6 +1,1 @@
-a = "Hello, world!";
-
-if (a == "Hello, world!") {
-    b = "Yes!";
-}
-
+a = "Hello " * 3;

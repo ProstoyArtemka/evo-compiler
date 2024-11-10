@@ -163,6 +163,8 @@ func MulOf(left any, right any) any {
 
 	// STRINGS AND INTEGERS
 
+	fmt.Println(left, right)
+
 	if leftType == STRING && rightType == INTEGER {
 		var buffer []string = make([]string, 0)
 

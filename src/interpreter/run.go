@@ -22,6 +22,7 @@ var scope map[string]any = make(map[string]any)
 var BinaryOperatorFunctions map[string]func(left any, right any) any = map[string]func(left any, right any) any{
 	"+":  SumOf,
 	"-":  SubOf,
+	"*":  MulOf,
 	"/":  DivOf,
 	"&&": AndOf,
 	"||": OrOf,
