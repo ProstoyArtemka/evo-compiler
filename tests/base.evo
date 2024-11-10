@@ -1,5 +1,6 @@
-a = "Hello";
+a = "Hello, world!";
 
-b = "World!!!";
+if (a == "Hello, world!") {
+    b = "Yes!";
+}
 
-c = a + ", " + b;

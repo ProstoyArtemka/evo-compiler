@@ -23,6 +23,13 @@ type BinaryOperatorNode struct {
 	Operator lexer.Token
 }
 
+type UnaryOperatorNode struct {
+	Node
+
+	Operand  Node
+	Operator lexer.Token
+}
+
 type VariableNode struct {
 	Node
 
@@ -35,4 +42,12 @@ type ConstantNode struct {
 	Value lexer.Token
 }
 
+type IfNode struct {
+	Node
+
+	Formula    Node
+	Expresions []Node
+}
+
 var nilToken = lexer.Token{}
+var nilNode = NilNode{}

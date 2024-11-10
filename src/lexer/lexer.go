@@ -8,7 +8,7 @@ var lexem string = ""
 var tokens []Token = make([]Token, 0)
 
 var spacesRegex *regexp.Regexp = regexp.MustCompile(`^[ \n\t\r]$`)
-var operatorsRegex *regexp.Regexp = regexp.MustCompile(`^[\=\+\-\*\/\(\)\!]$`)
+var operatorsRegex *regexp.Regexp = regexp.MustCompile(`^[\=\+\-\*\/\(\)\!\&\|\{\}]$`)
 
 var namesRegex *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z_]+[a-zA-Z_0-9]*$`)
 
@@ -24,6 +24,10 @@ func PushLexem(tokenType int) {
 
 		if namesRegex.MatchString(lexem) {
 			tokenType = NAME
+		}
+
+		if KEYWORDS.Contains(lexem) {
+			tokenType = KEYWORD_TYPES[lexem]
 		}
 
 		if integerRegex.MatchString(lexem) {
@@ -68,16 +72,23 @@ func ToTokens(content string) []Token {
 
 			lexem += current
 
-			var next = string(content[pos+1])
-			for pos < len(content) && operatorsRegex.MatchString(next) && OPERATORS.Contains(current+next) && len(lexem) < 2 {
-				lexem += string(content[pos+1])
+			if pos+1 < len(content) {
+				var next = string(content[pos+1])
 
-				pos++
-				next = string(content[pos+1])
+				for pos < len(content) && operatorsRegex.MatchString(next) && OPERATORS.Contains(current+next) && len(lexem) < 2 {
+					lexem += string(content[pos+1])
+
+					pos++
+
+					next = string(content[pos+1])
+				}
 			}
 
 			if BINARY_OPERATORS.Contains(lexem) {
 				PushLexem(BINARY_OPERATOR)
+
+			} else if UNARY_OPERATORS.Contains(lexem) {
+				PushLexem(UNARY_OPERATOR)
 
 			} else {
 				PushLexem(OPERATORS_TYPES[lexem])
