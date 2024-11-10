@@ -92,7 +92,7 @@ func SumOf(left any, right any) any {
 	// STRINGS
 
 	if leftType == STRING && rightType == STRING {
-		return strings.Join([]string{left.(string), right.(string)}, "")
+		return left.(string) + right.(string)
 	}
 
 	return nil

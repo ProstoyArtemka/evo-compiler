@@ -5,32 +5,18 @@ import (
 	"evo-compiler/src/lexer"
 	"evo-compiler/src/parser"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
-
-	"golang.org/x/text/encoding/unicode"
-	"golang.org/x/text/transform"
 )
 
 func readFile(filePath string) string {
-	codec := unicode.UTF8
 
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer file.Close()
-
-	rd := transform.NewReader(file, codec.NewDecoder())
-	data, err := ioutil.ReadAll(rd)
+	file, err := os.ReadFile(filePath)
 
 	if err != nil {
-		log.Fatal(err)
+		panic("Error while reading a file")
 	}
 
-	return string(data)
+	return string(file)
 }
 
 func main() {

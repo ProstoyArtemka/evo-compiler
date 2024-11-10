@@ -39,12 +39,12 @@ func Match(types ...int) lexer.Token {
 		}
 	}
 
-	return nilToken
+	return NullToken
 }
 
 func Expect(types ...int) {
 
-	if Match(types...) == nilToken {
+	if Match(types...) == NullToken {
 		panic(fmt.Sprintf("Expected other value in position %v", position))
 	}
 }
@@ -52,13 +52,13 @@ func Expect(types ...int) {
 func ParseConstantOrVariable() Node {
 	var constant = Match(lexer.INTEGER, lexer.FLOAT, lexer.STRING, lexer.FALSE, lexer.TRUE)
 
-	if constant != nilToken {
+	if constant != NullToken {
 		return ConstantNode{Value: constant}
 	}
 
 	var name = Match(lexer.NAME)
 
-	if name != nilToken {
+	if name != NullToken {
 		return VariableNode{Name: name}
 	}
 
@@ -67,7 +67,7 @@ func ParseConstantOrVariable() Node {
 
 func ParseBrackets() Node {
 
-	if Match(lexer.L_BRACKET) != nilToken {
+	if Match(lexer.L_BRACKET) != NullToken {
 		var node = ParseFormula()
 
 		Expect(lexer.R_BRACKET)
@@ -81,10 +81,10 @@ func ParseBrackets() Node {
 func ParseFormula() Node {
 	var left = ParseBrackets()
 
-	if left == nilNode {
+	if left == NullNode {
 		var operator = Match(lexer.UNARY_OPERATOR)
 
-		if operator != nilToken {
+		if operator != NullToken {
 			var right = ParseBrackets()
 
 			return UnaryOperatorNode{Operand: right, Operator: operator}
@@ -93,7 +93,7 @@ func ParseFormula() Node {
 
 	var operator = Match(lexer.BINARY_OPERATOR)
 
-	for operator != nilToken {
+	for operator != NullToken {
 		var right = ParseBrackets()
 		left = BinaryOperatorNode{Left: left, Right: right, Operator: operator}
 
@@ -105,36 +105,76 @@ func ParseFormula() Node {
 
 func ParseExpression() Node {
 
-	if Match(lexer.NAME) != nilToken {
+	if name := Match(lexer.NAME); name != NullToken {
 
-		if Match(lexer.ASSIGN) != nilToken {
+		if assign := Match(lexer.ASSIGN, lexer.GLOBAL_ASSIGN); assign != NullToken {
 			position -= 2
 
 			var name lexer.Token = Match(lexer.NAME)
 			var variable = VariableNode{Name: name}
 
-			Expect(lexer.ASSIGN)
+			Expect(assign.TokenType)
 
 			var node = ParseFormula()
 
-			return AssignNode{Left: variable, Right: node}
+			if assign.TokenType == lexer.ASSIGN {
+				return AssignNode{Left: variable, Right: node}
+			} else {
+				return GlobalAssignNode{Left: variable, Right: node}
+			}
+		}
+
+		if Match(lexer.L_BRACKET) != NullToken {
+
+			var arguments []Node
+			for Match(lexer.R_BRACKET) == NullToken {
+				var arg = ParseFormula()
+
+				arguments = append(arguments, arg)
+
+				if Match(lexer.COMMA) == NullToken {
+					break
+				}
+			}
+
+			position++
+
+			return CallFunctionNode{Name: name, Arguments: arguments}
 		}
 	}
 
-	if Match(lexer.IF) != nilToken {
+	if Match(lexer.IF) != NullToken {
 		var formula = ParseFormula()
 
 		Expect(lexer.C_L_BRACKET)
 
 		var expressions []Node = make([]Node, 0)
-		for Match(lexer.C_R_BRACKET) == nilToken {
+		for Match(lexer.C_R_BRACKET) == NullToken {
 			var expression = ParseExpression()
 			Expect(lexer.NEWLINE)
 
 			expressions = append(expressions, expression)
 		}
 
-		return IfNode{Formula: formula, Expresions: expressions}
+		var elseExpression Node = NullNode
+
+		if Match(lexer.ELSE) != NullToken {
+			Expect(lexer.C_L_BRACKET)
+
+			var elseExpressions []Node = make([]Node, 0)
+
+			for Match(lexer.C_R_BRACKET) == NullToken {
+				var expression = ParseExpression()
+
+				Expect(lexer.NEWLINE)
+
+				elseExpressions = append(elseExpressions, expression)
+			}
+
+			elseExpression = ElseNode{Expressions: elseExpressions}
+		}
+
+		return IfNode{Formula: formula, Expresions: expressions, Else: elseExpression}
 	}
 
 	return NilNode{}

@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"evo-compiler/src/parser"
-	"fmt"
 )
 
 type ConstantValue struct {
@@ -17,7 +16,9 @@ const (
 	BOOLEAN = 3
 )
 
-var scope map[string]any = make(map[string]any)
+type Scope map[string]any
+
+var GlobalScope Scope = make(Scope, 0)
 
 var BinaryOperatorFunctions map[string]func(left any, right any) any = map[string]func(left any, right any) any{
 	"+":  SumOf,
@@ -34,10 +35,10 @@ var UnaryOperatorFunctions map[string]func(operand any) any = map[string]func(op
 	"!": Not,
 }
 
-func RunBinaryOperator(node parser.BinaryOperatorNode) any {
+func RunBinaryOperator(node parser.BinaryOperatorNode, scope Scope) any {
 
-	var leftValue = GetValueFromNode(node.Left)
-	var rightValue = GetValueFromNode(node.Right)
+	var leftValue = GetValueFromNode(node.Left, scope)
+	var rightValue = GetValueFromNode(node.Right, scope)
 
 	var binaryFn = BinaryOperatorFunctions[node.Operator.Lexem]
 
@@ -48,9 +49,9 @@ func RunBinaryOperator(node parser.BinaryOperatorNode) any {
 	return binaryFn(leftValue, rightValue)
 }
 
-func RunUnaryOperator(node parser.UnaryOperatorNode) any {
+func RunUnaryOperator(node parser.UnaryOperatorNode, scope Scope) any {
 
-	var operand = GetValueFromNode(node.Operand)
+	var operand = GetValueFromNode(node.Operand, scope)
 	var unaryFn = UnaryOperatorFunctions[node.Operator.Lexem]
 
 	if unaryFn == nil {
@@ -60,7 +61,7 @@ func RunUnaryOperator(node parser.UnaryOperatorNode) any {
 	return unaryFn(operand)
 }
 
-func GetValueFromNode(node parser.Node) any {
+func GetValueFromNode(node parser.Node, scope Scope) any {
 
 	if constantNode, ok := node.(parser.ConstantNode); ok {
 		return ConstantValue{value: constantNode.Value.Lexem, constantType: constantNode.Value.TokenType}
@@ -71,44 +72,89 @@ func GetValueFromNode(node parser.Node) any {
 	}
 
 	if binaryNode, ok := node.(parser.BinaryOperatorNode); ok {
-		return RunBinaryOperator(binaryNode)
+		return RunBinaryOperator(binaryNode, scope)
 	}
 
 	if unaryNode, ok := node.(parser.UnaryOperatorNode); ok {
-		return RunUnaryOperator(unaryNode)
+		return RunUnaryOperator(unaryNode, scope)
 	}
 
 	return nil
 }
 
-func RunAssignNode(node parser.AssignNode) {
+func RunAssignNode(node parser.AssignNode, scope Scope) {
 
-	scope[node.Left.Name.Lexem] = GetValueFromNode(node.Right)
+	scope[node.Left.Name.Lexem] = GetValueFromNode(node.Right, scope)
 
 }
 
-func RunIfNode(node parser.IfNode) {
+func RunGlobalAssignNode(node parser.GlobalAssignNode) {
 
-	var formula = GetValueFromNode(node.Formula)
+	GlobalScope[node.Left.Name.Lexem] = GetValueFromNode(node.Right, GlobalScope)
+
+}
+
+func RunIfNode(node parser.IfNode, scope Scope) {
+
+	var formula = GetValueFromNode(node.Formula, scope)
 
 	if formula == true {
+		var localScope = make(Scope, 0)
 
 		for i := 0; i < len(node.Expresions); i++ {
 			var node = node.Expresions[i]
 
-			RunNode(node)
+			RunNode(node, localScope)
+		}
+	} else if formula == false && node.Else != parser.NullNode {
+		var elseNode = node.Else.(parser.ElseNode)
+		var localScope = make(Scope, 0)
+
+		for i := 0; i < len(elseNode.Expressions); i++ {
+			var expression = elseNode.Expressions[i]
+
+			RunNode(expression, localScope)
 		}
 	}
 }
 
-func RunNode(node parser.Node) {
+func RunCallFunction(node parser.CallFunctionNode, scope Scope) {
+	var callArgs []any = make([]any, 0)
+
+	for i := 0; i < len(node.Arguments); i++ {
+		var val = GetValueFromNode(node.Arguments[i], scope)
+
+		callArgs = append(callArgs, val)
+	}
+
+	var fn = GlobalFunctions[node.Name.Lexem]
+
+	if fn != nil {
+		fn(callArgs, scope)
+	}
+}
+
+func RunNode(node parser.Node, scope Scope) {
+	var currentScope = scope
+
+	if scope == nil {
+		currentScope = GlobalScope
+	}
 
 	if assignNode, ok := node.(parser.AssignNode); ok {
-		RunAssignNode(assignNode)
+		RunAssignNode(assignNode, currentScope)
+	}
+
+	if globalAssignNode, ok := node.(parser.GlobalAssignNode); ok {
+		RunGlobalAssignNode(globalAssignNode)
 	}
 
 	if ifNode, ok := node.(parser.IfNode); ok {
-		RunIfNode(ifNode)
+		RunIfNode(ifNode, currentScope)
+	}
+
+	if callFuncNode, ok := node.(parser.CallFunctionNode); ok {
+		RunCallFunction(callFuncNode, scope)
 	}
 
 }
@@ -116,8 +162,6 @@ func RunNode(node parser.Node) {
 func Run(nodes []parser.Node) {
 
 	for i := 0; i < len(nodes); i++ {
-		RunNode(nodes[i])
+		RunNode(nodes[i], nil)
 	}
-
-	fmt.Println(scope)
 }

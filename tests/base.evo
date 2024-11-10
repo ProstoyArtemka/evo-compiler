@@ -1,1 +1,1 @@
-a = "Hello " * 3;
+print("Hello,", "World!!!");

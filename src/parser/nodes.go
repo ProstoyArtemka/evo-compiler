@@ -15,6 +15,13 @@ type AssignNode struct {
 	Right Node
 }
 
+type GlobalAssignNode struct {
+	Node
+
+	Left  VariableNode
+	Right Node
+}
+
 type BinaryOperatorNode struct {
 	Node
 
@@ -47,7 +54,21 @@ type IfNode struct {
 
 	Formula    Node
 	Expresions []Node
+	Else       Node
 }
 
-var nilToken = lexer.Token{}
-var nilNode = NilNode{}
+type ElseNode struct {
+	Node
+
+	Expressions []Node
+}
+
+type CallFunctionNode struct {
+	Node
+
+	Name      lexer.Token
+	Arguments []Node
+}
+
+var NullToken = lexer.Token{}
+var NullNode = NilNode{}
