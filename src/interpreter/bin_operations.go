@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"evo-compiler/src/lexer"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -163,8 +162,6 @@ func MulOf(left any, right any) any {
 
 	// STRINGS AND INTEGERS
 
-	fmt.Println(left, right)
-
 	if leftType == STRING && rightType == INTEGER {
 		var buffer []string = make([]string, 0)
 
@@ -225,8 +222,6 @@ func AndOf(left any, right any) any {
 	left, right = GetConstantValues(left, right)
 	leftType, rightType := GetTypes(left, right)
 
-	fmt.Println(leftType, rightType)
-
 	if leftType == rightType {
 
 		if leftType == BOOLEAN {
@@ -281,4 +276,135 @@ func Equals(left any, right any) any {
 
 func NotEquals(left any, right any) any {
 	return !(Equals(left, right).(bool))
+}
+
+func More(left any, right any) any {
+	left, right = GetConstantValues(left, right)
+	leftType, rightType := GetTypes(left, right)
+
+	// INTEGERS
+
+	if leftType == INTEGER && rightType == INTEGER {
+		return left.(int) > right.(int)
+	}
+
+	// FLOATS
+
+	if leftType == FLOAT && rightType == FLOAT {
+		return left.(float64) > right.(float64)
+	}
+
+	// FLOATS AND INTEGERS
+
+	if leftType == INTEGER && rightType == FLOAT {
+		return float64(left.(int)) > right.(float64)
+	}
+
+	if leftType == FLOAT && rightType == INTEGER {
+		return left.(float64) > float64(right.(int))
+	}
+
+	return false
+}
+
+func Less(left any, right any) any {
+	left, right = GetConstantValues(left, right)
+	leftType, rightType := GetTypes(left, right)
+
+	// INTEGERS
+
+	if leftType == INTEGER && rightType == INTEGER {
+		return left.(int) < right.(int)
+	}
+
+	// FLOATS
+
+	if leftType == FLOAT && rightType == FLOAT {
+		return left.(float64) < right.(float64)
+	}
+
+	// FLOATS AND INTEGERS
+
+	if leftType == INTEGER && rightType == FLOAT {
+		return float64(left.(int)) < right.(float64)
+	}
+
+	if leftType == FLOAT && rightType == INTEGER {
+		return left.(float64) < float64(right.(int))
+	}
+
+	return false
+}
+
+func MoreEquals(left any, right any) any {
+	left, right = GetConstantValues(left, right)
+	leftType, rightType := GetTypes(left, right)
+
+	// INTEGERS
+
+	if leftType == INTEGER && rightType == INTEGER {
+		return left.(int) >= right.(int)
+	}
+
+	// FLOATS
+
+	if leftType == FLOAT && rightType == FLOAT {
+		return left.(float64) >= right.(float64)
+	}
+
+	// FLOATS AND INTEGERS
+
+	if leftType == INTEGER && rightType == FLOAT {
+		return float64(left.(int)) >= right.(float64)
+	}
+
+	if leftType == FLOAT && rightType == INTEGER {
+		return left.(float64) >= float64(right.(int))
+	}
+
+	return false
+}
+
+func LessEquals(left any, right any) any {
+	left, right = GetConstantValues(left, right)
+	leftType, rightType := GetTypes(left, right)
+
+	// INTEGERS
+
+	if leftType == INTEGER && rightType == INTEGER {
+		return left.(int) <= right.(int)
+	}
+
+	// FLOATS
+
+	if leftType == FLOAT && rightType == FLOAT {
+		return left.(float64) <= right.(float64)
+	}
+
+	// FLOATS AND INTEGERS
+
+	if leftType == INTEGER && rightType == FLOAT {
+		return float64(left.(int)) <= right.(float64)
+	}
+
+	if leftType == FLOAT && rightType == INTEGER {
+		return left.(float64) <= float64(right.(int))
+	}
+
+	return false
+}
+
+var BinaryOperatorFunctions map[string]func(left any, right any) any = map[string]func(left any, right any) any{
+	"+":  SumOf,
+	"-":  SubOf,
+	"*":  MulOf,
+	"/":  DivOf,
+	"&&": AndOf,
+	"||": OrOf,
+	"==": Equals,
+	"!=": NotEquals,
+	">":  More,
+	"<":  Less,
+	">=": MoreEquals,
+	"<=": LessEquals,
 }

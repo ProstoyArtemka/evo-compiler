@@ -45,3 +45,7 @@ func Not(operand any) any {
 
 	return false
 }
+
+var UnaryOperatorFunctions map[string]func(operand any) any = map[string]func(operand any) any{
+	"!": Not,
+}

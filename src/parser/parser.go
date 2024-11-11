@@ -11,7 +11,7 @@ var tokens []lexer.Token = nil
 var expressions []Node = make([]Node, 0)
 var position = 0
 
-var EXPRESSIONS_WITHOUT_NEWLINE []Node = []Node{IfNode{}}
+var EXPRESSIONS_WITHOUT_NEWLINE []Node = []Node{IfNode{}, DeclareFunctionNode{}}
 
 func IsWithoutNewline(expression Node) bool {
 
@@ -58,6 +58,24 @@ func ParseConstantOrVariable() Node {
 
 	var name = Match(lexer.NAME)
 
+	if Match(lexer.L_BRACKET) != NullToken {
+
+		var arguments []Node
+		for Match(lexer.R_BRACKET) == NullToken {
+			var arg = ParseFormula()
+
+			arguments = append(arguments, arg)
+
+			if Match(lexer.COMMA) == NullToken {
+				break
+			}
+		}
+
+		position++
+
+		return CallFunctionNode{Name: name, Arguments: arguments}
+	}
+
 	if name != NullToken {
 		return VariableNode{Name: name}
 	}
@@ -103,6 +121,22 @@ func ParseFormula() Node {
 	return left
 }
 
+func ParseExpressionsUntilBracket() []Node {
+	var expressions = make([]Node, 0)
+
+	for Match(lexer.C_R_BRACKET) == NullToken {
+		var expression = ParseExpression()
+
+		if !IsWithoutNewline(expression) {
+			Expect(lexer.NEWLINE)
+		}
+
+		expressions = append(expressions, expression)
+	}
+
+	return expressions
+}
+
 func ParseExpression() Node {
 
 	if name := Match(lexer.NAME); name != NullToken {
@@ -133,11 +167,11 @@ func ParseExpression() Node {
 				arguments = append(arguments, arg)
 
 				if Match(lexer.COMMA) == NullToken {
+					Expect(lexer.R_BRACKET)
+
 					break
 				}
 			}
-
-			position++
 
 			return CallFunctionNode{Name: name, Arguments: arguments}
 		}
@@ -148,33 +182,55 @@ func ParseExpression() Node {
 
 		Expect(lexer.C_L_BRACKET)
 
-		var expressions []Node = make([]Node, 0)
-		for Match(lexer.C_R_BRACKET) == NullToken {
-			var expression = ParseExpression()
-			Expect(lexer.NEWLINE)
-
-			expressions = append(expressions, expression)
-		}
+		var expressions []Node = ParseExpressionsUntilBracket()
 
 		var elseExpression Node = NullNode
 
 		if Match(lexer.ELSE) != NullToken {
 			Expect(lexer.C_L_BRACKET)
-
-			var elseExpressions []Node = make([]Node, 0)
-
-			for Match(lexer.C_R_BRACKET) == NullToken {
-				var expression = ParseExpression()
-
-				Expect(lexer.NEWLINE)
-
-				elseExpressions = append(elseExpressions, expression)
-			}
+			var elseExpressions []Node = ParseExpressionsUntilBracket()
 
 			elseExpression = ElseNode{Expressions: elseExpressions}
 		}
 
 		return IfNode{Formula: formula, Expresions: expressions, Else: elseExpression}
+	}
+
+	if Match(lexer.FUNCTION) != NullToken {
+		var name = Match(lexer.NAME)
+
+		Expect(lexer.L_BRACKET)
+
+		var args []lexer.Token = make([]lexer.Token, 0)
+		for Match(lexer.R_BRACKET) == NullToken {
+			var arg = Match(lexer.NAME)
+
+			if arg == NullToken {
+				Expect(lexer.R_BRACKET)
+
+				break
+			}
+
+			args = append(args, arg)
+
+			if Match(lexer.COMMA) == NullToken {
+				Expect(lexer.R_BRACKET)
+
+				break
+			}
+		}
+
+		Expect(lexer.C_L_BRACKET)
+
+		var expressions []Node = ParseExpressionsUntilBracket()
+
+		return DeclareFunctionNode{Name: name, Expressions: expressions, Arguments: args}
+	}
+
+	if (Match(lexer.RETURN)) != NullToken {
+		var formula = ParseFormula()
+
+		return ReturnNode{Value: formula}
 	}
 
 	return NilNode{}
@@ -189,7 +245,6 @@ func ParseTokens(inTokens []lexer.Token) []Node {
 		expressions = append(expressions, expression)
 
 		var isWithoutNewline = IsWithoutNewline(expression)
-
 		if !isWithoutNewline {
 			Expect(lexer.NEWLINE)
 		}

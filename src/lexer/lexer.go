@@ -2,13 +2,14 @@ package lexer
 
 import (
 	"regexp"
+	"strings"
 )
 
 var lexem string = ""
 var tokens []Token = make([]Token, 0)
 
 var spacesRegex *regexp.Regexp = regexp.MustCompile(`^[ \n\t\r]$`)
-var operatorsRegex *regexp.Regexp = regexp.MustCompile(`^[\=\+\-\*\/\(\)\!\&\|\{\}\:\,]$`)
+var operatorsRegex *regexp.Regexp = regexp.MustCompile(`^[\=\+\-\*\/\(\)\!\&\|\{\}\:\,\>\<]$`)
 
 var namesRegex *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z_]+[a-zA-Z_0-9]*$`)
 
@@ -61,6 +62,9 @@ func ToTokens(content string) []Token {
 			}
 
 			pos++
+
+			lexem = strings.ReplaceAll(lexem, "\\n", "\n")
+			lexem = strings.ReplaceAll(lexem, "\\t", "\t")
 
 			PushLexem(STRING)
 

@@ -1,1 +1,10 @@
-print("Hello,", "World!!!");
+function fact(x) {
+    if x <= 0 {
+        return 1;
+    }
+
+    return fact(x - 1) * x;
+}
+
+print("Output:", fact(5), "\n");
+

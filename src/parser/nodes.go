@@ -70,5 +70,19 @@ type CallFunctionNode struct {
 	Arguments []Node
 }
 
+type DeclareFunctionNode struct {
+	Node
+
+	Name        lexer.Token
+	Arguments   []lexer.Token
+	Expressions []Node
+}
+
+type ReturnNode struct {
+	Node
+
+	Value Node
+}
+
 var NullToken = lexer.Token{}
 var NullNode = NilNode{}
