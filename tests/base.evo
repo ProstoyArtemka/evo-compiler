@@ -1,0 +1,15 @@
+result = random(0, 100);
+
+print("Guess a number between 0 and 100: ");
+answer = num(read());
+
+while result != answer {
+    text = result > answer ? "greater then" : "less then";
+
+    println("Wrong. Number is", text, answer);
+    print("Guess: ");
+
+    answer := num(read());
+}
+
+println("Yes! Number is", answer);

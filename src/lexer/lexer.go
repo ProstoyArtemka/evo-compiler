@@ -13,8 +13,8 @@ var operatorsRegex *regexp.Regexp = regexp.MustCompile(`^[\=\+\-\*\/\(\)\!\&\|\{
 
 var namesRegex *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z_]+[a-zA-Z_0-9]*$`)
 
-var integerRegex *regexp.Regexp = regexp.MustCompile(`^[0-9]$`)
-var floatRegex *regexp.Regexp = regexp.MustCompile(`^[0-9]+.[0-9]+$`)
+var integerRegex *regexp.Regexp = regexp.MustCompile(`^[0-9]+$`)
+var floatRegex *regexp.Regexp = regexp.MustCompile(`^[0-9]+\.[0-9]+$`)
 
 func PushLexem(tokenType int) {
 	if lexem == "" {

@@ -11,7 +11,7 @@ var tokens []lexer.Token = nil
 var expressions []Node = make([]Node, 0)
 var position = 0
 
-var EXPRESSIONS_WITHOUT_NEWLINE []Node = []Node{IfNode{}, DeclareFunctionNode{}}
+var EXPRESSIONS_WITHOUT_NEWLINE []Node = []Node{IfNode{}, DeclareFunctionNode{}, WhileNode{}}
 
 func IsWithoutNewline(expression Node) bool {
 
@@ -67,11 +67,11 @@ func ParseConstantOrVariable() Node {
 			arguments = append(arguments, arg)
 
 			if Match(lexer.COMMA) == NullToken {
+				Expect(lexer.R_BRACKET)
+
 				break
 			}
 		}
-
-		position++
 
 		return CallFunctionNode{Name: name, Arguments: arguments}
 	}
@@ -125,7 +125,7 @@ func ParseFormula() Node {
 
 		var falseFormula = ParseFormula()
 
-		return TernaryOperator{BoolExpression: left, TrueExpression: trueFormula, FalseExpression: falseFormula}
+		return TernaryNode{BoolExpression: left, TrueExpression: trueFormula, FalseExpression: falseFormula}
 	}
 
 	return left
@@ -241,6 +241,16 @@ func ParseExpression() Node {
 		var formula = ParseFormula()
 
 		return ReturnNode{Value: formula}
+	}
+
+	if Match(lexer.WHILE) != NullToken {
+		var formula = ParseFormula()
+
+		Expect(lexer.C_L_BRACKET)
+
+		var expressions = ParseExpressionsUntilBracket()
+
+		return WhileNode{Formula: formula, Expressions: expressions}
 	}
 
 	return NilNode{}

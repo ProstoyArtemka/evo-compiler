@@ -90,7 +90,7 @@ func GetValueFromNode(node parser.Node, scope Scope) any {
 		return GetValueFromNode(returnNode.Value, scope)
 	}
 
-	if ternaryNode, ok := node.(parser.TernaryOperator); ok {
+	if ternaryNode, ok := node.(parser.TernaryNode); ok {
 		var expr = GetValueFromNode(ternaryNode.BoolExpression, scope)
 
 		if expr.(bool) {
@@ -229,6 +229,30 @@ func RunDeclareFunction(node parser.DeclareFunctionNode, scope Scope) any {
 	return declared
 }
 
+func RunWhileNode(node parser.WhileNode, scope Scope) any {
+	var isTrue = GetValueFromNode(node.Formula, scope)
+
+	if b, isBool := isTrue.(bool); isBool {
+
+		if !b {
+			return nil
+		}
+	}
+
+	for i := 0; i < len(node.Expressions); i++ {
+		var expression = node.Expressions[i]
+		var state, _ = RunNode(expression, scope)
+
+		if state != OK {
+			break
+		}
+	}
+
+	RunWhileNode(node, scope)
+
+	return nil
+}
+
 func RunNode(node parser.Node, scope Scope) (State, any) {
 	var currentScope = scope
 
@@ -260,8 +284,12 @@ func RunNode(node parser.Node, scope Scope) (State, any) {
 		return RETURNED, GetValueFromNode(returnNode, currentScope)
 	}
 
-	if ternaryNode, ok := node.(parser.TernaryOperator); ok {
+	if ternaryNode, ok := node.(parser.TernaryNode); ok {
 		return OK, GetValueFromNode(ternaryNode, currentScope)
+	}
+
+	if whileNode, ok := node.(parser.WhileNode); ok {
+		RunWhileNode(whileNode, currentScope)
 	}
 
 	return OK, nil

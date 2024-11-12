@@ -4,7 +4,6 @@ import (
 	"evo-compiler/src/interpreter"
 	"evo-compiler/src/lexer"
 	"evo-compiler/src/parser"
-	"fmt"
 	"os"
 )
 
@@ -29,13 +28,13 @@ func main() {
 
 	var tokens []lexer.Token = lexer.ToTokens(fileContent)
 
-	for i := 0; i < len(tokens); i++ {
-		fmt.Printf("Position: %v\n", i)
+	// for i := 0; i < len(tokens); i++ {
+	// 	fmt.Printf("Position: %v\n", i)
 
-		tokens[i].Print()
+	// 	tokens[i].Print()
 
-		fmt.Println()
-	}
+	// 	fmt.Println()
+	// }
 
 	var ast []parser.Node = parser.ParseTokens(tokens)
 	interpreter.Run(ast)

@@ -44,6 +44,8 @@ const (
 	QUESTION_MARK = 21
 	COLON         = 22
 
+	WHILE = 23
+
 	EOF = 256
 )
 
@@ -78,9 +80,10 @@ var OPERATORS_TYPES map[string]int = map[string]int{
 	":": COLON,
 }
 
-var KEYWORDS = utils.StringArray{"if", "else", "true", "false", "function", "return"}
+var KEYWORDS = utils.StringArray{"if", "else", "true", "false", "function", "return", "while"}
 var KEYWORD_TYPES map[string]int = map[string]int{
 	"if":       IF,
+	"while":    WHILE,
 	"else":     ELSE,
 	"true":     TRUE,
 	"false":    FALSE,
