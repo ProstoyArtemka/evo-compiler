@@ -41,6 +41,9 @@ const (
 	RETURN = 19
 	LAMBDA = 20
 
+	QUESTION_MARK = 21
+	COLON         = 22
+
 	EOF = 256
 )
 
@@ -53,7 +56,7 @@ func (token Token) Print() {
 	fmt.Printf("Lexem: %s\nType: %s\n", token.Lexem, fmt.Sprint(token.TokenType))
 }
 
-var OPERATORS = utils.StringArray{"-", "+", "=", "*", "/", "!", "==", "!=", ":=", "(", ")", "{", "}", "&", "|", "&&", "||", ":", ",", ">", "<", ">=", "<=", "=>"}
+var OPERATORS = utils.StringArray{"-", "+", "=", "*", "/", "!", "==", "!=", ":=", "(", ")", "{", "}", "&", "|", "&&", "||", ":", ",", ">", "<", ">=", "<=", "=>", "?"}
 var BINARY_OPERATORS = utils.StringArray{"-", "+", "*", "/", "==", "!=", "&&", "||", ">", "<", ">=", "<="}
 
 var UNARY_OPERATORS = utils.StringArray{"!"}
@@ -67,8 +70,12 @@ var OPERATORS_TYPES map[string]int = map[string]int{
 
 	"=":  ASSIGN,
 	":=": GLOBAL_ASSIGN,
+
 	",":  COMMA,
 	"=>": LAMBDA,
+
+	"?": QUESTION_MARK,
+	":": COLON,
 }
 
 var KEYWORDS = utils.StringArray{"if", "else", "true", "false", "function", "return"}

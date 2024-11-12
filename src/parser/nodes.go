@@ -84,5 +84,14 @@ type ReturnNode struct {
 	Value Node
 }
 
+type TernaryOperator struct {
+	Node
+
+	BoolExpression Node
+
+	TrueExpression  Node
+	FalseExpression Node
+}
+
 var NullToken = lexer.Token{}
 var NullNode = NilNode{}

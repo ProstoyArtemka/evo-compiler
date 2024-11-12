@@ -118,6 +118,16 @@ func ParseFormula() Node {
 		operator = Match(lexer.BINARY_OPERATOR)
 	}
 
+	if operator == NullToken && Match(lexer.QUESTION_MARK) != NullToken {
+		var trueFormula = ParseFormula()
+
+		Expect(lexer.COLON)
+
+		var falseFormula = ParseFormula()
+
+		return TernaryOperator{BoolExpression: left, TrueExpression: trueFormula, FalseExpression: falseFormula}
+	}
+
 	return left
 }
 

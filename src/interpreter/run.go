@@ -90,6 +90,16 @@ func GetValueFromNode(node parser.Node, scope Scope) any {
 		return GetValueFromNode(returnNode.Value, scope)
 	}
 
+	if ternaryNode, ok := node.(parser.TernaryOperator); ok {
+		var expr = GetValueFromNode(ternaryNode.BoolExpression, scope)
+
+		if expr.(bool) {
+			return GetValueFromNode(ternaryNode.TrueExpression, scope)
+		} else {
+			return GetValueFromNode(ternaryNode.FalseExpression, scope)
+		}
+	}
+
 	return nil
 }
 
@@ -112,6 +122,10 @@ func RunIfNode(node parser.IfNode, scope Scope) (State, any) {
 	if formula == true {
 		var localScope = make(Scope, 0)
 
+		for key, val := range scope {
+			localScope[key] = val
+		}
+
 		for i := 0; i < len(node.Expresions); i++ {
 			var node = node.Expresions[i]
 
@@ -125,6 +139,10 @@ func RunIfNode(node parser.IfNode, scope Scope) (State, any) {
 	} else if formula == false && node.Else != parser.NullNode {
 		var elseNode = node.Else.(parser.ElseNode)
 		var localScope = make(Scope, 0)
+
+		for key, val := range scope {
+			localScope[key] = val
+		}
 
 		for i := 0; i < len(elseNode.Expressions); i++ {
 			var expression = elseNode.Expressions[i]
@@ -143,6 +161,10 @@ func RunIfNode(node parser.IfNode, scope Scope) (State, any) {
 func RunDeclaredFunction(function DeclaredFunction, args []any, scope Scope) any {
 	var returnValue any = nil
 	var localScope = make(Scope, 0)
+
+	for key, val := range scope {
+		localScope[key] = val
+	}
 
 	for i := 0; i < len(args); i++ {
 		var arg = args[i]
@@ -236,6 +258,10 @@ func RunNode(node parser.Node, scope Scope) (State, any) {
 
 	if returnNode, ok := node.(parser.ReturnNode); ok {
 		return RETURNED, GetValueFromNode(returnNode, currentScope)
+	}
+
+	if ternaryNode, ok := node.(parser.TernaryOperator); ok {
+		return OK, GetValueFromNode(ternaryNode, currentScope)
 	}
 
 	return OK, nil
